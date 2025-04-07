@@ -25,8 +25,12 @@ export default function RootLayout({
     <ClerkProvider appearance={{
       variables: { colorPrimary: '#624cf5' }
     }}>
-      <html lang="en">
-        <body className={cn("font-IBMPlex antialiased", IBMPlex.variable)}>
+      <html lang="en" suppressHydrationWarning>
+        <body className={cn(
+          "min-h-screen font-IBMPlex antialiased", 
+          IBMPlex.variable,
+          "bg-white dark:bg-gray-900" // Añadido para prevenir flashes en modo oscuro
+        )}>
           {children}
         </body>
       </html>
