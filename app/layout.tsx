@@ -2,9 +2,10 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { IBM_Plex_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { dark } from "@clerk/themes"; // 👈 Importa el tema correcto
 import { cn } from "@/lib/utils";
 
-// Configurar la fuente
+// Fuente Google
 const IBMPlex = IBM_Plex_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -12,24 +13,20 @@ const IBMPlex = IBM_Plex_Sans({
   display: "swap",
 });
 
-// Metadatos de la aplicación
+// Metadata
 export const metadata: Metadata = {
   title: "Imaginify",
   description: "Transforma imágenes con IA",
 };
 
-// Componente raíz
+// Layout principal
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider
-      appearance={{
-        baseTheme: "dark", // O "light", o quitarlo para usar tema automático
-      }}
-    >
+    <ClerkProvider appearance={{ baseTheme: dark }}>
       <html lang="en" suppressHydrationWarning>
         <body
           className={cn(
