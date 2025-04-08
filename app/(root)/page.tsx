@@ -3,16 +3,19 @@ import { navLinks } from "@/constants"
 import { getAllImages } from "@/lib/actions/image.actions"
 import Image from "next/image"
 import Link from "next/link"
+import { headers } from "next/headers"
 
-interface SearchParamProps {
-  searchParams: { [key: string]: string | string[] | undefined };
-}
+export default async function Home() {
+  const headersList = await headers(); // 👈 Aquí el await
 
-const Home = async ({ searchParams }: SearchParamProps) => {
-  const page = Number(searchParams?.page) || 1;
-  const searchQuery = (searchParams?.query as string) || '';
+  const url = headersList.get("x-url") || "";
+  const queryString = url.split("?")[1] || "";
+  const params = new URLSearchParams(queryString);
 
-  const images = await getAllImages({ page, searchQuery })
+  const page = Number(params.get("page")) || 1;
+  const searchQuery = params.get("query") || "";
+
+  const images = await getAllImages({ page, searchQuery });
 
   return (
     <>
@@ -47,5 +50,3 @@ const Home = async ({ searchParams }: SearchParamProps) => {
     </>
   )
 }
-
-export default Home
