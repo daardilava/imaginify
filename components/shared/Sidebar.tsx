@@ -1,11 +1,18 @@
-"use client"
+'use client';
 
-import { navLinks } from '@/constants'
-import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
-import Image from 'next/image'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Button } from '../ui/button'
+import { navLinks } from '@/constants';
+import { SignedIn, SignedOut } from '@clerk/nextjs';
+import dynamic from 'next/dynamic';
+import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Button } from '../ui/button';
+
+// Importar UserButton de forma dinámica (sólo en cliente)
+const UserButton = dynamic(() =>
+  import('@clerk/nextjs').then((mod) => mod.UserButton),
+  { ssr: false }
+);
 
 const Sidebar = () => {
   const pathname = usePathname();
@@ -21,14 +28,17 @@ const Sidebar = () => {
           <SignedIn>
             <ul className="sidebar-nav_elements">
               {navLinks.slice(0, 6).map((link) => {
-                const isActive = link.route === pathname
+                const isActive = link.route === pathname;
 
                 return (
-                  <li key={link.route} className={`sidebar-nav_element group ${
-                    isActive ? 'bg-purple-gradient text-white' : 'text-gray-700'
-                  }`}>
+                  <li
+                    key={link.route}
+                    className={`sidebar-nav_element group ${
+                      isActive ? 'bg-purple-gradient text-white' : 'text-gray-700'
+                    }`}
+                  >
                     <Link className="sidebar-link" href={link.route}>
-                      <Image 
+                      <Image
                         src={link.icon}
                         alt="logo"
                         width={24}
@@ -38,21 +48,23 @@ const Sidebar = () => {
                       {link.label}
                     </Link>
                   </li>
-                )
+                );
               })}
-              </ul>
-
+            </ul>
 
             <ul className="sidebar-nav_elements">
               {navLinks.slice(6).map((link) => {
-                const isActive = link.route === pathname
+                const isActive = link.route === pathname;
 
                 return (
-                  <li key={link.route} className={`sidebar-nav_element group ${
-                    isActive ? 'bg-purple-gradient text-white' : 'text-gray-700'
-                  }`}>
+                  <li
+                    key={link.route}
+                    className={`sidebar-nav_element group ${
+                      isActive ? 'bg-purple-gradient text-white' : 'text-gray-700'
+                    }`}
+                  >
                     <Link className="sidebar-link" href={link.route}>
-                      <Image 
+                      <Image
                         src={link.icon}
                         alt="logo"
                         width={24}
@@ -62,11 +74,12 @@ const Sidebar = () => {
                       {link.label}
                     </Link>
                   </li>
-                )
+                );
               })}
 
+              {/* Evitar hydration error: UserButton solo en cliente */}
               <li className="flex-center cursor-pointer gap-2 p-4">
-                <UserButton afterSignOutUrl='/' showName />
+                <UserButton afterSignOutUrl="/" showName />
               </li>
             </ul>
           </SignedIn>
@@ -79,7 +92,7 @@ const Sidebar = () => {
         </nav>
       </div>
     </aside>
-  )
-}
+  );
+};
 
-export default Sidebar
+export default Sidebar;
