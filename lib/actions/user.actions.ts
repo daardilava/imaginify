@@ -1,87 +1,106 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import User from "../database/models/user.model";
 import { connectToDatabase } from "../database/mongoose";
 import { handleError } from "../utils";
+import User, { IUser } from "../database/models/user.model";
 
-// CREATE
-export async function createUser(user: CreateUserParams) {
+// Definición de tipos extendidos para Mongoose
+interface MongooseUser extends IUser {
+  _id: string;
+  __v?: number;
+}
+
+type LeanUserDocument = MongooseUser & {
+  createdAt?: Date;
+  updatedAt?: Date;
+};
+
+// CREATE USER
+export async function createUser(user: CreateUserParams): Promise<LeanUserDocument | null> {
   try {
     await connectToDatabase();
+    
     const newUser = await User.create(user);
-    return newUser.toObject(); // más limpio que JSON.parse(JSON.stringify(...))
+    
+    if (!newUser) {
+      throw new Error("User creation failed");
+    }
+    
+    return JSON.parse(JSON.stringify(newUser.toObject()));
   } catch (error) {
     handleError(error, "Error creating user");
     return null;
   }
 }
 
-// READ
-export async function getUserById(userId: string) {
+// READ USER BY ID
+export async function getUserById(userId: string): Promise<LeanUserDocument | null> {
   try {
-    if (!userId) {
-      throw new Error("No userId provided to getUserById()");
-    }
+    if (!userId) throw new Error("Missing userId");
 
     await connectToDatabase();
 
-    const user = await User.findOne({ clerkId: userId }).lean();
-
+    const user = await User.findOne({ clerkId: userId }).lean<LeanUserDocument>();
+    
     if (!user) {
       console.warn(`User not found for clerkId: ${userId}`);
-      return null; // o lanza error si lo prefieres
+      return null;
     }
 
-    return user;
+    return JSON.parse(JSON.stringify(user));
   } catch (error) {
     handleError(error, "Error fetching user by ID");
     return null;
   }
 }
 
-// UPDATE
-export async function updateUser(clerkId: string, user: UpdateUserParams) {
+// UPDATE USER
+export async function updateUser(
+  clerkId: string,
+  user: UpdateUserParams
+): Promise<LeanUserDocument | null> {
   try {
-    if (!clerkId) throw new Error("No clerkId provided to updateUser()");
+    if (!clerkId) throw new Error("Missing clerkId");
 
     await connectToDatabase();
 
-    const updatedUser = await User.findOneAndUpdate({ clerkId }, user, {
-      new: true,
-      runValidators: true,
-    }).lean();
+    const updatedUser = await User.findOneAndUpdate(
+      { clerkId },
+      user,
+      { new: true, runValidators: true }
+    ).lean<LeanUserDocument>();
 
     if (!updatedUser) {
-      console.warn(`User not found or update failed for clerkId: ${clerkId}`);
+      console.warn(`User update failed for clerkId: ${clerkId}`);
       return null;
     }
 
-    return updatedUser;
+    return JSON.parse(JSON.stringify(updatedUser));
   } catch (error) {
     handleError(error, "Error updating user");
     return null;
   }
 }
 
-// DELETE
-export async function deleteUser(clerkId: string) {
+// DELETE USER
+export async function deleteUser(clerkId: string): Promise<LeanUserDocument | null> {
   try {
-    if (!clerkId) throw new Error("No clerkId provided to deleteUser()");
+    if (!clerkId) throw new Error("Missing clerkId");
 
     await connectToDatabase();
 
-    const userToDelete = await User.findOne({ clerkId });
-
+    const userToDelete = await User.findOne({ clerkId }).lean<LeanUserDocument>();
+    
     if (!userToDelete) {
-      console.warn(`User to delete not found: ${clerkId}`);
+      console.warn(`User not found for deletion: ${clerkId}`);
       return null;
     }
 
     const deletedUser = await User.findByIdAndDelete(userToDelete._id);
     revalidatePath("/");
 
-    return deletedUser ? deletedUser.toObject() : null;
+    return deletedUser ? JSON.parse(JSON.stringify(deletedUser.toObject())) : null;
   } catch (error) {
     handleError(error, "Error deleting user");
     return null;
@@ -89,28 +108,45 @@ export async function deleteUser(clerkId: string) {
 }
 
 // UPDATE CREDITS
-export async function updateCredits(userId: string, creditFee: number) {
+export async function updateCredits(
+  userId: string,
+  creditFee: number
+): Promise<LeanUserDocument | null> {
   try {
     if (!userId || typeof creditFee !== "number") {
-      throw new Error("Invalid parameters in updateCredits()");
+      throw new Error("Invalid parameters");
     }
 
     await connectToDatabase();
 
-    const updatedUserCredits = await User.findOneAndUpdate(
+    const updatedUser = await User.findOneAndUpdate(
       { _id: userId },
       { $inc: { creditBalance: creditFee } },
       { new: true, runValidators: true }
-    ).lean();
+    ).lean<LeanUserDocument>();
 
-    if (!updatedUserCredits) {
+    if (!updatedUser) {
       console.warn(`Credit update failed for user: ${userId}`);
       return null;
     }
 
-    return updatedUserCredits;
+    return JSON.parse(JSON.stringify(updatedUser));
   } catch (error) {
-    handleError(error, "Error updating user credits");
+    handleError(error, "Error updating credits");
     return null;
   }
+}
+
+// Interfaces auxiliares
+interface CreateUserParams {
+  clerkId: string;
+  email: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  photo: string;
+}
+
+interface UpdateUserParams extends Partial<CreateUserParams> {
+  creditBalance?: number;
 }
