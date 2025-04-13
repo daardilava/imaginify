@@ -6,28 +6,28 @@ import { twMerge } from "tailwind-merge";
 
 import { aspectRatioOptions } from "@/constants";
 
+// COMBINA CLASES DE TAILWIND Y CLSX
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// ERROR HANDLER
-export const handleError = (error: unknown) => {
+// MANEJADOR DE ERRORES CON CONTEXTO OPCIONAL
+export const handleError = (error: unknown, context = "unknown") => {
+  let errorMessage = `Error in ${context}: `;
+
   if (error instanceof Error) {
-    // This is a native JavaScript error (e.g., TypeError, RangeError)
-    console.error(error.message);
-    throw new Error(`Error: ${error.message}`);
+    console.error(errorMessage + error.message);
+    throw new Error(errorMessage + error.message);
   } else if (typeof error === "string") {
-    // This is a string error message
-    console.error(error);
-    throw new Error(`Error: ${error}`);
+    console.error(errorMessage + error);
+    throw new Error(errorMessage + error);
   } else {
-    // This is an unknown type of error
-    console.error(error);
-    throw new Error(`Unknown error: ${JSON.stringify(error)}`);
+    console.error(errorMessage + JSON.stringify(error));
+    throw new Error(errorMessage + JSON.stringify(error));
   }
 };
 
-// PLACEHOLDER LOADER - while image is transforming
+// EFECTO SHIMMER PARA PLACEHOLDER DE IMAGEN
 const shimmer = (w: number, h: number) => `
 <svg width="${w}" height="${h}" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs>
@@ -50,9 +50,8 @@ const toBase64 = (str: string) =>
 export const dataUrl = `data:image/svg+xml;base64,${toBase64(
   shimmer(1000, 1000)
 )}`;
-// ==== End
 
-// FORM URL QUERY
+// AGREGA PARAMETRO AL URL QUERY
 export const formUrlQuery = ({
   searchParams,
   key,
@@ -65,7 +64,7 @@ export const formUrlQuery = ({
   })}`;
 };
 
-// REMOVE KEY FROM QUERY
+// REMUEVE CLAVES DEL URL QUERY
 export function removeKeysFromQuery({
   searchParams,
   keysToRemove,
@@ -76,7 +75,6 @@ export function removeKeysFromQuery({
     delete currentUrl[key];
   });
 
-  // Remove null or undefined values
   Object.keys(currentUrl).forEach(
     (key) => currentUrl[key] == null && delete currentUrl[key]
   );
@@ -84,7 +82,7 @@ export function removeKeysFromQuery({
   return `${window.location.pathname}?${qs.stringify(currentUrl)}`;
 }
 
-// DEBOUNCE
+// DEBOUNCE FUNCTION
 export const debounce = (func: (...args: any[]) => void, delay: number) => {
   let timeoutId: NodeJS.Timeout | null;
   return (...args: any[]) => {
@@ -93,7 +91,7 @@ export const debounce = (func: (...args: any[]) => void, delay: number) => {
   };
 };
 
-// GE IMAGE SIZE
+// OBTIENE TAMAÑO DE IMAGEN SEGÚN RATIO
 export type AspectRatioKey = keyof typeof aspectRatioOptions;
 export const getImageSize = (
   type: string,
@@ -109,7 +107,7 @@ export const getImageSize = (
   return image?.[dimension] || 1000;
 };
 
-// DOWNLOAD IMAGE
+// DESCARGA UNA IMAGEN
 export const download = (url: string, filename: string) => {
   if (!url) {
     throw new Error("Resource URL not provided! You need to provide one");
@@ -130,9 +128,9 @@ export const download = (url: string, filename: string) => {
     .catch((error) => console.log({ error }));
 };
 
-// DEEP MERGE OBJECTS
+// FUSIONA DOS OBJETOS DE FORMA PROFUNDA
 export const deepMergeObjects = (obj1: any, obj2: any) => {
-  if(obj2 === null || obj2 === undefined) {
+  if (obj2 === null || obj2 === undefined) {
     return obj1;
   }
 
